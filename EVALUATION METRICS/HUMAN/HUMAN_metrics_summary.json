@@ -1,0 +1,12 @@
+{
+  "model": "SafeGuard-HUMAN",
+  "epochs": 75,
+  "best_epoch": 65,
+  "mAP50_pct": 67.58,
+  "mAP50_95_pct": 41.22,
+  "precision_pct": 80.92,
+  "recall_pct": 57.27,
+  "f1_pct": 67.07,
+  "train_hours": 4.63,
+  "grade": "\u2605\u2606\u2606 ACCEPTABLE"
+}

@@ -1,0 +1,4 @@
+model,epochs,best_epoch,mAP50_pct,mAP50_95_pct,precision_pct,recall_pct,f1_pct,train_hours,grade
+SafeGuard-HUMAN,75,65,67.58,41.22,80.92,57.27,67.07,4.63,★☆☆ ACCEPTABLE
+SafeGuard-TOOLS,100,98,90.95,74.2,90.14,83.99,86.96,1.71,★★★ EXCELLENT
+SafeGuard-PPE,200,187,79.9,48.63,81.94,71.48,76.35,6.19,★★☆ GOOD

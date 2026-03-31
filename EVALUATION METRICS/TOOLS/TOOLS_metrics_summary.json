@@ -1,0 +1,12 @@
+{
+  "model": "SafeGuard-TOOLS",
+  "epochs": 100,
+  "best_epoch": 98,
+  "mAP50_pct": 90.95,
+  "mAP50_95_pct": 74.2,
+  "precision_pct": 90.14,
+  "recall_pct": 83.99,
+  "f1_pct": 86.96,
+  "train_hours": 1.71,
+  "grade": "\u2605\u2605\u2605 EXCELLENT"
+}

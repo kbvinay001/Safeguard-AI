@@ -1,0 +1,12 @@
+{
+  "model": "SafeGuard-PPE",
+  "epochs": 200,
+  "best_epoch": 187,
+  "mAP50_pct": 79.9,
+  "mAP50_95_pct": 48.63,
+  "precision_pct": 81.94,
+  "recall_pct": 71.48,
+  "f1_pct": 76.35,
+  "train_hours": 6.19,
+  "grade": "\u2605\u2605\u2606 GOOD"
+}

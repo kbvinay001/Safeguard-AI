@@ -1,10 +1,10 @@
 """
 streamlit_app.py — SafeGuard AI Cyberpunk Dashboard
 ====================================================
-Complete UI overhaul: military-HUD / cyberpunk aesthetic with
-corner-bracket cards, animated cyan accents, and monospace fonts.
+Military-HUD / cyberpunk aesthetic: corner-bracket cards,
+animated cyan accents, monospace fonts.
 
-Deployment: Railway (Procfile) + Supabase Postgres
+Launch locally: double-click  Launch SafeGuard AI.bat
 """
 
 import streamlit as st
@@ -54,9 +54,8 @@ def _init():
         heatmap_acc=None, live_active=False,
         live_queue=None, live_stop=None,
         compliance=100.0,
-        # Two-level navigation
-        top_page="dashboard",   # "dashboard" | "deployment"
-        sub_page="home",        # "home"|"analyse"|"analytics"|"history"|"logs"|"train"
+        # Navigation
+        sub_page="home",        # "home"|"analyse"|"live"|"analytics"|"history"|"logs"|"system"|"train"
     )
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -113,13 +112,11 @@ if st.session_state.engine is None:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# TOP NAVIGATION BAR
+# TOP NAVIGATION BAR (single bar — local launch via bat file)
 # ════════════════════════════════════════════════════════════════════════════
 engine = st.session_state.engine
 models_active = len(engine.loaded_models) if engine else 0
-
-_top  = st.session_state.top_page
-_sub  = st.session_state.sub_page
+_sub = st.session_state.sub_page
 
 st.markdown(f"""
 <div class="topnav">
@@ -134,138 +131,29 @@ st.markdown(f"""
       <div class="topnav-subtitle">AI SAFETY MONITORING SYSTEM v2.0</div>
     </div>
   </div>
-  <div class="topnav-tabs">
-    <div class="topnav-tab {'active' if _top=='dashboard' else ''}">
-      <div class="tab-dot"></div>
-      ◆ DASHBOARD
-    </div>
-    <div class="topnav-tab {'active' if _top=='deployment' else ''}">
-      <div class="tab-radio"><div class="tab-radio-inner"></div></div>
-      ◎ DEPLOYMENT
-    </div>
+  <div style="display:flex;align-items:center;gap:1.2rem;">
+    <span class="pill pill-on">&#11044; AI ENGINE ONLINE</span>
+    <span style="font-family:var(--mono);font-size:.62rem;color:var(--muted);">SESSION <strong style="color:#00ffcc;">{st.session_state.session_id}</strong></span>
+    <span style="font-family:var(--mono);font-size:.62rem;color:var(--muted);">MODELS <strong style="color:#00ffcc;">{models_active}/3</strong></span>
   </div>
 </div>
 """, unsafe_allow_html=True)
-
-# Actual Streamlit navigation buttons (invisible, positioned over HTML tabs)
-t1, t2, _g = st.columns([1, 1, 6])
-with t1:
-    if st.button("▸ DASHBOARD", key="nav_dashboard", use_container_width=True):
-        st.session_state.top_page = "dashboard"
-        st.session_state.sub_page = "home"
-        st.rerun()
-with t2:
-    if st.button("⊙ DEPLOYMENT", key="nav_deployment", use_container_width=True):
-        st.session_state.top_page = "deployment"
-        st.rerun()
-
-top_page = st.session_state.top_page
-
 
 # ════════════════════════════════════════════════════════════════════════════
-# DEPLOYMENT MODE — Railway / Supabase deployment info page
-# ════════════════════════════════════════════════════════════════════════════
-if top_page == "deployment":
-    st.markdown(section("// DEPLOYMENT CONFIGURATION"), unsafe_allow_html=True)
-
-    d1, d2 = st.columns(2)
-
-    with d1:
-        st.markdown("""
-<div class="sg-card">
-  <div class="qa-title">🛤 RAILWAY (PROCFILE)</div>
-  <div class="feature-desc" style="margin-top:.6rem;">
-    <strong style="color:#a0c4b0;">Procfile</strong><br>
-    <code style="font-family:var(--mono);color:#00ffcc;font-size:.78rem;">
-    web: streamlit run streamlit_app.py --server.port=$PORT --server.address=0.0.0.0
-    </code><br><br>
-    Railway auto-detects the Procfile and deploys the app publicly.<br>
-    No localhost required — Railway assigns a public HTTPS URL.<br><br>
-    <strong style="color:#a0c4b0;">requirements.txt</strong> includes all Python deps.<br>
-    Model weights are loaded from environment-variable paths.
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-        st.markdown("""
-<div class="sg-card" style="margin-top:.9rem;">
-  <div class="qa-title">🗄 SUPABASE POSTGRES</div>
-  <div class="feature-desc" style="margin-top:.6rem;">
-    Set these environment variables in Railway:<br><br>
-    <code style="font-family:var(--mono);color:#00ffcc;font-size:.76rem;">
-    SUPABASE_URL=https://&lt;project&gt;.supabase.co<br>
-    SUPABASE_KEY=&lt;service_role_key&gt;<br>
-    DATABASE_URL=postgresql://postgres:...@db.supabase.co:5432/postgres
-    </code><br><br>
-    The db_manager.py automatically uses Postgres when DATABASE_URL is set,
-    falling back to SQLite for local development.
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-    with d2:
-        st.markdown("""
-<div class="sg-card">
-  <div class="qa-title">⚡ QUICK DEPLOY STEPS</div>
-  <div class="feature-desc" style="margin-top:.8rem;font-family:var(--mono);font-size:.76rem;line-height:2;">
-    <span style="color:#00ffcc;">01</span>&nbsp; Push code to GitHub<br>
-    <span style="color:#00ffcc;">02</span>&nbsp; New project → Deploy from GitHub<br>
-    <span style="color:#00ffcc;">03</span>&nbsp; Add Supabase plugin in Railway<br>
-    <span style="color:#00ffcc;">04</span>&nbsp; Set YOLO weight paths as env vars<br>
-    <span style="color:#00ffcc;">05</span>&nbsp; Railway auto-builds via requirements.txt<br>
-    <span style="color:#00ffcc;">06</span>&nbsp; Public HTTPS URL generated automatically<br>
-    <span style="color:#00ffcc;">07</span>&nbsp; SafeGuard AI live — no localhost needed
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-        st.markdown(f"""
-<div class="cmd-grid" style="margin-top:.9rem;">
-  {cmd_card("PLATFORM", "Railway", "PaaS, auto HTTPS", "cy")}
-  {cmd_card("DATABASE", "Supabase", "Postgres in prod", "gn")}
-  {cmd_card("PORT", "$PORT", "Auto-assigned", "bl")}
-  {cmd_card("MODELS", f"{models_active}/3", "YOLOv11n loaded", "or")}
-</div>
-""", unsafe_allow_html=True)
-
-    st.markdown(section("// PROCFILE CONTENT"), unsafe_allow_html=True)
-    st.code(
-        "web: streamlit run streamlit_app.py "
-        "--server.port=$PORT --server.address=0.0.0.0 "
-        "--server.headless=true --browser.gatherUsageStats=false",
-        language="bash"
-    )
-
-    st.markdown(section("// ENV VARIABLES (set in Railway dashboard)"), unsafe_allow_html=True)
-    st.code("""DATABASE_URL=postgresql://postgres:<password>@db.<project>.supabase.co:5432/postgres
-SUPABASE_URL=https://<project>.supabase.co
-SUPABASE_KEY=<service_role_key>
-HUMAN_WEIGHTS_PATH=/app/models/human_best.pt
-PPE_WEIGHTS_PATH=/app/models/ppe_best.pt
-TOOL_WEIGHTS_PATH=/app/models/tools_best.pt""", language="bash")
-
-    st.markdown("""
-<div class="sg-footer">
-  <span>SafeGuard AI</span> &nbsp;·&nbsp; Deploy via Railway + Supabase &nbsp;·&nbsp;
-  No localhost required &nbsp;·&nbsp; HTTPS auto-provisioned
-</div>
-""", unsafe_allow_html=True)
-    st.stop()
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# DASHBOARD MODE — sub navigation
+# SUB NAVIGATION — all pages in one bar
 # ════════════════════════════════════════════════════════════════════════════
 SUB_PAGES = [
     ("home",      "♦",  "HOME"),
     ("analyse",   "▶",  "ANALYSE"),
-    ("analytics", "◉", "ANALYTICS"),
+    ("live",      "◉",  "LIVE RTSP"),
+    ("analytics", "◈",  "ANALYTICS"),
     ("history",   "≋",  "HISTORY"),
     ("logs",      "≡",  "LOGS"),
+    ("system",    "⊞",  "SYSTEM"),
     ("train",     "⚡", "TRAIN"),
 ]
 
-# Render HTML sub-nav (for display)
+# HTML sub-nav (visual display)
 sub_html = '<div class="subnav">'
 for key, icon, label in SUB_PAGES:
     active_cls = "active" if _sub == key else ""
@@ -273,7 +161,7 @@ for key, icon, label in SUB_PAGES:
 sub_html += "</div>"
 st.markdown(sub_html, unsafe_allow_html=True)
 
-# Actual Streamlit sub-nav buttons (small, rendered above the visual sub-nav)
+# Actual clickable Streamlit buttons
 sub_cols = st.columns(len(SUB_PAGES))
 for i, (key, icon, label) in enumerate(SUB_PAGES):
     with sub_cols[i]:
@@ -282,6 +170,7 @@ for i, (key, icon, label) in enumerate(SUB_PAGES):
             st.rerun()
 
 sub_page = st.session_state.sub_page
+
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1026,11 +915,72 @@ elif sub_page == "train":
 
     rc1, rc2 = st.columns([4, 1])
     with rc1:
-        st.markdown(f'<div class="cmd-sub">Last refreshed: {datetime.datetime.now().strftime("%H:%M:%S")} — auto-refreshes every 30s</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="cmd-sub">Last refreshed: {datetime.datetime.now().strftime("%H:%M:%S")}</div>', unsafe_allow_html=True)
     with rc2:
-        if st.button("↺ REFRESH", use_container_width=True):
+        if st.button("\u21ba REFRESH", use_container_width=True):
             st.rerun()
-    time.sleep(30); st.rerun()
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# PAGE: SYSTEM INFO
+# ════════════════════════════════════════════════════════════════════════════
+elif sub_page == "system":
+    st.markdown(section("// SYSTEM INFORMATION"), unsafe_allow_html=True)
+
+    import platform
+    try:
+        import torch as _torch
+        cuda_ok  = _torch.cuda.is_available()
+        gpu_name = _torch.cuda.get_device_name(0) if cuda_ok else "N/A"
+        gpu_mem  = f"{_torch.cuda.get_device_properties(0).total_memory / 1073741824:.1f} GB" if cuda_ok else "N/A"
+        torch_ver = _torch.__version__
+    except Exception:
+        cuda_ok = False; gpu_name = "N/A"; gpu_mem = "N/A"; torch_ver = "N/A"
+    try:
+        import ultralytics as _ul; ul_ver = _ul.__version__
+    except Exception:
+        ul_ver = "N/A"
+
+    st.markdown(f"""
+<div class="cmd-grid">
+  {cmd_card("PYTHON",      platform.python_version(), "Runtime",           "cy")}
+  {cmd_card("PLATFORM",    platform.system(),          platform.release(),  "bl")}
+  {cmd_card("TORCH",       torch_ver,                  "PyTorch",           "or")}
+  {cmd_card("ULTRALYTICS", ul_ver,                     "YOLOv11 framework", "gn")}
+  {cmd_card("CUDA",        "YES" if cuda_ok else "NO", "GPU acceleration",  "gn" if cuda_ok else "rd")}
+  {cmd_card("GPU",         gpu_name,                   gpu_mem,             "cy")}
+  {cmd_card("MODELS",      f"{models_active}/3",       "Loaded",            "or")}
+  {cmd_card("SESSION",     st.session_state.session_id,"Active",            "wh")}
+</div>
+""", unsafe_allow_html=True)
+
+    st.markdown(section("WEIGHT FILE STATUS"), unsafe_allow_html=True)
+    from safety_config import HUMAN_WEIGHTS, PPE_WEIGHTS, TOOL_WEIGHTS
+    rows_html = ""
+    for mn, wp, perf, ds in [
+        ("HUMAN", HUMAN_WEIGHTS,  "99.44% mAP@50", "15,357 images"),
+        ("PPE",   PPE_WEIGHTS,    "79.90% mAP@50", "11-class merged"),
+        ("TOOLS", TOOL_WEIGHTS,   "67.87% mAP@50", "6,535 images"),
+    ]:
+        ok = Path(wp).exists()
+        rows_html += f"<tr><td><span style='color:#00ffcc;font-family:var(--mono);'>{mn}</span></td><td style='color:#3a6050;word-break:break-all;'>{wp}</td><td><span class='{'ls' if ok else 'la'}'>{'&#10003; OK' if ok else '&#10007; MISSING'}</span></td><td style='color:#a0c4b0;'>{perf}</td><td style='color:#3a6050;'>{ds}</td></tr>"
+    st.markdown(f"""
+<table class="sg-table"><thead><tr>
+  <th>MODEL</th><th>WEIGHT PATH</th><th>STATUS</th><th>PERFORMANCE</th><th>DATASET</th>
+</tr></thead><tbody>{rows_html}</tbody></table>""", unsafe_allow_html=True)
+
+    st.markdown(section("LAUNCH GUIDE"), unsafe_allow_html=True)
+    st.markdown("""
+<div class="sg-card">
+  <div style="font-family:var(--mono);font-size:.78rem;line-height:2.3;color:#a0c4b0;">
+    <span style="color:#00ffcc;">LAUNCH &nbsp;&nbsp; </span>Double-click <strong>Launch SafeGuard AI.bat</strong><br>
+    <span style="color:#00ffcc;">URL &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>http://localhost:8501<br>
+    <span style="color:#00ffcc;">STOP &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>Close the terminal window<br>
+    <span style="color:#00ffcc;">GPU &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>RTX 4060 &nbsp;&#183;&nbsp; CUDA FP16 &nbsp;&#183;&nbsp; auto-detected<br>
+    <span style="color:#00ffcc;">DATABASE &nbsp;</span>outputs\\safeguard.db (SQLite, auto-created)
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 
 # ════════════════════════════════════════════════════════════════════════════

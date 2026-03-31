@@ -1,0 +1,104 @@
+SAFEGUARD AI – HUMAN MODEL EVALUATION REPORT
+Generated automatically from training results.csv
+----------------------------------------------------------------------
+
+======================================================================
+# 1. MODEL OVERVIEW
+======================================================================
+  Model Name                           SafeGuard-HUMAN
+  Architecture                         YOLOv11n (nano)
+  Task                                 Person / Worker detection in construction & industrial environments
+  Dataset                              15,357 industrial CCTV images
+  Classes                              person
+  Training Device                      NVIDIA RTX 4060 · CUDA FP16
+  Total Epochs Run                     75 / 75
+  Total Training Time                  4.63 hours  (278 minutes)
+  Best Weights                         E:\4TH YEAR PROJECT\HUMAN\runs\detect\train_fast\weights\best.pt
+
+======================================================================
+# 2. PEAK PERFORMANCE  (Best Checkpoint)
+======================================================================
+  Best Epoch                           Epoch 65
+  mAP @ IoU 0.50                       67.58%   ★☆☆ ACCEPTABLE
+  mAP @ IoU 0.50:0.95                  41.22%   ★☆☆ ACCEPTABLE
+  Precision                            80.92%
+  Recall                               57.27%
+  F1-Score                             67.07%
+
+======================================================================
+# 3. LOSS PROGRESSION  (Train)
+======================================================================
+  Epoch    Box Loss       Cls Loss       DFL Loss      
+  --------------------------------------------------
+  Start (ep 1) 1.6663        1.2423        1.3798        
+  Mid (ep 38) 1.3761        0.8686        1.2150        
+  Final (ep 75) 1.2841        0.7732        1.1610        
+
+======================================================================
+# 4. VALIDATION LOSS PROGRESSION
+======================================================================
+  Epoch    Val Box        Val Cls        Val DFL       
+  --------------------------------------------------
+  Start (ep 1) 1.6746        1.2624        1.4075        
+  Mid (ep 38) 1.3413        0.8050        1.1828        
+  Final (ep 75) 1.3245        0.7824        1.1692        
+
+======================================================================
+# 5. mAP@50 MILESTONE TABLE  (every 10 epochs)
+======================================================================
+  Epoch    mAP@50       mAP@50:95      Precision    Recall     F1
+  -----------------------------------------------------------------
+  1        51.31       26.93         64.89       44.78     52.99
+  10       61.98       35.68         76.03       52.33     61.99
+  20       64.97       38.46         78.70       54.76     64.58
+  30       66.21       39.93         79.73       56.14     65.89
+  40       66.82       40.53         80.45       56.37     66.29
+  50       67.29       41.00         81.25       56.66     66.76
+  60       67.51       41.19         80.73       57.31     67.03
+  70       67.57       41.22         80.94       57.22     67.05
+  75       67.57       41.22         80.87       57.24     67.03
+
+======================================================================
+# 6. AVAILABLE EVALUATION PLOTS
+======================================================================
+
+  ✅  results.png
+  ✅  BoxF1_curve.png
+  ✅  BoxPR_curve.png
+  ✅  BoxP_curve.png
+  ✅  BoxR_curve.png
+  ✅  confusion_matrix.png
+  ✅  confusion_matrix_normalized.png
+
+======================================================================
+# 7. INTERPRETATION & INSIGHTS
+======================================================================
+
+  Training improved mAP@50 by 16.3pp over 75 epochs.
+
+  ► Model achieves ACCEPTABLE accuracy. Consider more data or longer training.
+
+  Precision=80.9% means 80.9% of detections are correct.
+  Recall=57.3% means 57.3% of actual objects are detected.
+  F1-Score=67.1% (harmonic mean of precision & recall).
+  Box loss dropped by 0.3823  |  Cls loss dropped by 0.4691
+
+  NOTE: All images annotated via Roboflow; trained with YOLOv11n using
+        CUDA FP16 acceleration. Background: industrial CCTV footage.
+        Weights saved: best.pt (highest val mAP) & last.pt (final epoch).
+
+======================================================================
+# 8. DEPLOYMENT RECOMMENDATION
+======================================================================
+
+  Use: E:\4TH YEAR PROJECT\HUMAN\runs\detect\train_fast\weights\best.pt
+  Confidence threshold: 0.45 (recommended for industrial scenes)
+  IoU threshold:        0.45
+  Input resolution:     640×640
+  Inference mode:       FP16 (CUDA) for max FPS
+
+  Used alongside PPE model to pair detected workers with safety gear status.
+
+======================================================================
+END OF REPORT
+======================================================================

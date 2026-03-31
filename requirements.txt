@@ -1,38 +1,31 @@
-# SafeGuard AI — Railway Production Requirements
-# ================================================
-# Uses CPU-only PyTorch to stay under Railway's 4 GB image limit.
-# CUDA is not available on Railway free tier anyway — models run on CPU.
-# Estimated image size: ~1.5 GB (down from 6.2 GB with CUDA torch)
-#
-# Install locally:  pip install -r requirements.txt
-# On Railway:       auto-installed via Procfile build step
+# SafeGuard AI — Local Requirements
+# ====================================
+# Run locally on Windows with NVIDIA GPU (RTX 4060).
+# Install: pip install -r requirements.txt
 
-# ── CPU-only PyTorch (critical — prevents CUDA packages adding ~4 GB) ─────────
-# This index only serves CPU wheels — torch + torchvision ~300 MB total
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.2.2+cpu
-torchvision==0.17.2+cpu
+# ── Core AI ───────────────────────────────────────────────────────────────────
+ultralytics>=8.1.0          # YOLOv11 inference
+torch>=2.1.0                # PyTorch (uses your GPU automatically)
+torchvision>=0.16.0
 
-# ── Core AI / Vision ───────────────────────────────────────────────────────────
-ultralytics>=8.1.0          # YOLOv11 training + inference (auto-selects CPU)
-opencv-python-headless>=4.9.0  # headless build — no Qt/GTK GUI deps (~50 MB saved)
+# ── Vision ────────────────────────────────────────────────────────────────────
+opencv-python>=4.9.0
 numpy>=1.26.0
 
-# ── Web application ────────────────────────────────────────────────────────────
+# ── Web dashboard ─────────────────────────────────────────────────────────────
 streamlit>=1.32.0
 streamlit-option-menu>=0.3.6
 
-# ── Data + charts ──────────────────────────────────────────────────────────────
+# ── Data + charts ─────────────────────────────────────────────────────────────
 pandas>=2.2.0
 plotly>=5.20.0
 
-# ── PDF report generation ──────────────────────────────────────────────────────
+# ── PDF reports ───────────────────────────────────────────────────────────────
 fpdf2>=2.7.0
 
-# ── Database ───────────────────────────────────────────────────────────────────
-psycopg2-binary>=2.9.9      # Postgres driver for Supabase
+# ── Database ──────────────────────────────────────────────────────────────────
+psycopg2-binary>=2.9.9      # only needed if connecting to Supabase Postgres
 
-# ── Utilities ──────────────────────────────────────────────────────────────────
+# ── Utilities ─────────────────────────────────────────────────────────────────
 Pillow>=10.0.0
 requests>=2.31.0
-python-multipart>=0.0.9     # FastAPI file uploads

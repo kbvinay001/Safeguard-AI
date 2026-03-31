@@ -1,0 +1,115 @@
+SAFEGUARD AI – PPE MODEL EVALUATION REPORT
+Generated automatically from training results.csv
+----------------------------------------------------------------------
+
+======================================================================
+# 1. MODEL OVERVIEW
+======================================================================
+  Model Name                           SafeGuard-PPE
+  Architecture                         YOLOv11n (nano)
+  Task                                 Personal Protective Equipment compliance detection (11 classes)
+  Dataset                              Custom Industrial Environment PPE Dataset
+  Classes                              barehead, helmet, barechest, highvis, barearms, sleeves, barehands, gloves, barelegs, pants, boots
+  Training Device                      NVIDIA RTX 4060 · CUDA FP16
+  Total Epochs Run                     200 / 200
+  Total Training Time                  6.19 hours  (371 minutes)
+  Best Weights                         E:\4TH YEAR PROJECT\NEW PPE\runs\detect\train_v2_nano\weights\best.pt
+
+======================================================================
+# 2. PEAK PERFORMANCE  (Best Checkpoint)
+======================================================================
+  Best Epoch                           Epoch 187
+  mAP @ IoU 0.50                       79.90%   ★★☆ GOOD
+  mAP @ IoU 0.50:0.95                  48.63%   ★☆☆ ACCEPTABLE
+  Precision                            81.94%
+  Recall                               71.48%
+  F1-Score                             76.35%
+
+======================================================================
+# 3. LOSS PROGRESSION  (Train)
+======================================================================
+  Epoch    Box Loss       Cls Loss       DFL Loss      
+  --------------------------------------------------
+  Start (ep 1) 1.9410        3.0407        2.3217        
+  Mid (ep 101) 1.4110        1.4447        1.7392        
+  Final (ep 200) 1.2039        0.9118        1.5662        
+
+======================================================================
+# 4. VALIDATION LOSS PROGRESSION
+======================================================================
+  Epoch    Val Box        Val Cls        Val DFL       
+  --------------------------------------------------
+  Start (ep 1) 2.0710        6.1117        2.4163        
+  Mid (ep 101) 1.4480        1.2401        1.7501        
+  Final (ep 200) 1.4383        1.1537        1.7378        
+
+======================================================================
+# 5. mAP@50 MILESTONE TABLE  (every 10 epochs)
+======================================================================
+  Epoch    mAP@50       mAP@50:95      Precision    Recall     F1
+  -----------------------------------------------------------------
+  1        23.16       8.23          46.75       26.24     33.62
+  10       53.29       24.52         58.74       49.67     53.83
+  20       62.53       32.45         68.18       57.39     62.32
+  30       66.40       36.57         72.41       57.88     64.33
+  40       68.44       37.71         70.52       61.97     65.97
+  50       70.78       39.38         74.45       61.74     67.50
+  60       71.95       41.45         73.24       65.50     69.16
+  70       74.85       44.01         77.66       66.74     71.79
+  80       75.57       44.84         77.22       67.08     71.80
+  90       76.60       45.83         77.29       68.46     72.61
+  100      77.16       46.31         78.26       68.49     73.05
+  110      77.81       47.12         81.06       68.78     74.42
+  120      78.42       47.50         80.67       69.59     74.72
+  130      78.45       47.59         79.17       70.32     74.48
+  140      79.11       47.92         80.49       70.92     75.41
+  150      79.78       48.52         81.63       70.57     75.70
+  160      79.67       48.62         81.11       71.25     75.86
+  170      79.74       48.55         80.45       71.37     75.64
+  180      79.64       48.48         81.70       71.24     76.11
+  190      79.86       48.57         81.48       71.34     76.07
+  200      79.73       48.50         81.84       70.92     75.99
+
+======================================================================
+# 6. AVAILABLE EVALUATION PLOTS
+======================================================================
+
+  ✅  results.png
+  ✅  BoxF1_curve.png
+  ✅  BoxPR_curve.png
+  ✅  BoxP_curve.png
+  ✅  BoxR_curve.png
+  ✅  confusion_matrix.png
+  ✅  confusion_matrix_normalized.png
+
+======================================================================
+# 7. INTERPRETATION & INSIGHTS
+======================================================================
+
+  Training improved mAP@50 by 56.7pp over 200 epochs.
+
+  ► Model achieves GOOD accuracy. Suitable for deployment with monitoring.
+
+  Precision=81.9% means 81.9% of detections are correct.
+  Recall=71.5% means 71.5% of actual objects are detected.
+  F1-Score=76.4% (harmonic mean of precision & recall).
+  Box loss dropped by 0.7372  |  Cls loss dropped by 2.1289
+
+  NOTE: All images annotated via Roboflow; trained with YOLOv11n using
+        CUDA FP16 acceleration. Background: industrial CCTV footage.
+        Weights saved: best.pt (highest val mAP) & last.pt (final epoch).
+
+======================================================================
+# 8. DEPLOYMENT RECOMMENDATION
+======================================================================
+
+  Use: E:\4TH YEAR PROJECT\NEW PPE\runs\detect\train_v2_nano\weights\best.pt
+  Confidence threshold: 0.45 (recommended for industrial scenes)
+  IoU threshold:        0.45
+  Input resolution:     640×640
+  Inference mode:       FP16 (CUDA) for max FPS
+
+
+======================================================================
+END OF REPORT
+======================================================================
