@@ -1,0 +1,7 @@
+# PPE Dataset -- Cleaned (merged 17 -> 11 classes)
+train: ../train/images
+val:   ../valid/images
+test:  ../test/images
+
+nc: 11
+names: ['shoe', 'mask', 'glove', 'goggle', 'helmet', 'no_vest', 'no_mask', 'no_glove', 'no_helmet', 'person', 'vest']

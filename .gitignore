@@ -1,0 +1,88 @@
+# ==============================================================================
+# SafeGuard AI — .gitignore
+# ==============================================================================
+
+# ── Python cache ──────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.pyc
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+.env
+
+# ── Model weights (too large for GitHub, use Git LFS or store externally) ─────
+*.pt
+*.pth
+*.onnx
+*.engine
+*.torchscript
+
+# ── YOLO training run artefacts ───────────────────────────────────────────────
+**/runs/
+# Individual large artefacts inside runs that may be committed selectively:
+**/*train_batch*.jpg
+**/*val_batch*.jpg
+**/labels.jpg
+**/labels_correlogram.jpg
+**/last.pt
+
+# ── Dataset images (large, not committed — download separately) ───────────────
+HUMAN/train/
+HUMAN/valid/
+HUMAN/test/
+NEW PPE/train/
+NEW PPE/valid/
+NEW PPE/test/
+NEW TOOLS/train/
+NEW TOOLS/valid/
+NEW TOOLS/test/
+TOOLS/train/
+TOOLS/valid/
+TOOLS/test/
+**/images/
+
+# ── Original backup labels (large) ────────────────────────────────────────────
+**/labels_backup_original/
+
+# ── SQLite database ───────────────────────────────────────────────────────────
+outputs/
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Temporary / output video files ───────────────────────────────────────────
+*.mp4
+*.avi
+*.mov
+*.mkv
+# Exception: keep demo files if present
+!demo_*.mp4
+
+# ── Uploaded / processed inference outputs ────────────────────────────────────
+*_out.mp4
+*_heatmap.jpg
+*_report.json
+tmp_*.mp4
+
+# ── OS & IDE junk ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/settings.json
+
+# ── Streamlit secrets ─────────────────────────────────────────────────────────
+.streamlit/secrets.toml
+
+# ── Large background images ───────────────────────────────────────────────────
+WEB DEPLOYMENT/bg_image.jpg
+WEB DEPLOYMENT/industrial_banner.png
+
+# ── Source Codes compilation ──────────────────────────────────────────────────
+Source Codes.txt

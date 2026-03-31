@@ -1,0 +1,26 @@
+# SafeGuard AI — All required packages
+# Python 3.12 · Install with: pip install -r requirements.txt
+
+# Core AI
+ultralytics>=8.0.0        # YOLOv11 training + inference
+torch>=2.0.0              # PyTorch (GPU via CUDA)
+torchvision>=0.15.0
+
+# Vision
+opencv-python>=4.8.0      # video capture, frame annotation
+numpy>=1.24.0
+
+# Web app
+streamlit>=1.32.0
+streamlit-option-menu>=0.3.6
+
+# Data + charts
+pandas>=2.0.0
+plotly>=5.18.0
+
+# Reports
+reportlab>=4.0.0
+
+# Utilities
+Pillow>=10.0.0
+requests>=2.31.0

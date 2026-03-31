@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 17
+names: ['SafetyShoe', 'boot', 'faceMask', 'glove', 'gloves', 'goggle', 'hardhat', 'head', 'helmet', 'no vest', 'no_faceMask', 'no_gloves', 'no_helmet', 'no_vest', 'object', 'person', 'vest']
+
+roboflow:
+  workspace: ds2209
+  project: safetycomplianceds
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/ds2209/safetycomplianceds/dataset/1
