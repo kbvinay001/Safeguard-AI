@@ -1,26 +1,38 @@
-# SafeGuard AI — All required packages
-# Python 3.12 · Install with: pip install -r requirements.txt
+# SafeGuard AI — Railway Production Requirements
+# ================================================
+# Uses CPU-only PyTorch to stay under Railway's 4 GB image limit.
+# CUDA is not available on Railway free tier anyway — models run on CPU.
+# Estimated image size: ~1.5 GB (down from 6.2 GB with CUDA torch)
+#
+# Install locally:  pip install -r requirements.txt
+# On Railway:       auto-installed via Procfile build step
 
-# Core AI
-ultralytics>=8.0.0        # YOLOv11 training + inference
-torch>=2.0.0              # PyTorch (GPU via CUDA)
-torchvision>=0.15.0
+# ── CPU-only PyTorch (critical — prevents CUDA packages adding ~4 GB) ─────────
+# This index only serves CPU wheels — torch + torchvision ~300 MB total
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
 
-# Vision
-opencv-python>=4.8.0      # video capture, frame annotation
-numpy>=1.24.0
+# ── Core AI / Vision ───────────────────────────────────────────────────────────
+ultralytics>=8.1.0          # YOLOv11 training + inference (auto-selects CPU)
+opencv-python-headless>=4.9.0  # headless build — no Qt/GTK GUI deps (~50 MB saved)
+numpy>=1.26.0
 
-# Web app
+# ── Web application ────────────────────────────────────────────────────────────
 streamlit>=1.32.0
 streamlit-option-menu>=0.3.6
 
-# Data + charts
-pandas>=2.0.0
-plotly>=5.18.0
+# ── Data + charts ──────────────────────────────────────────────────────────────
+pandas>=2.2.0
+plotly>=5.20.0
 
-# Reports
-reportlab>=4.0.0
+# ── PDF report generation ──────────────────────────────────────────────────────
+fpdf2>=2.7.0
 
-# Utilities
+# ── Database ───────────────────────────────────────────────────────────────────
+psycopg2-binary>=2.9.9      # Postgres driver for Supabase
+
+# ── Utilities ──────────────────────────────────────────────────────────────────
 Pillow>=10.0.0
 requests>=2.31.0
+python-multipart>=0.0.9     # FastAPI file uploads

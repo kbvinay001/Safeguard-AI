@@ -275,7 +275,9 @@ FONT_THICKNESS = 2
 # INFERENCE DEVICE
 # ==============================================================================
 
-DEVICE = 0   # 0 = first GPU (NVIDIA RTX 4060); use "cpu" for CPU-only inference
+import os as _os
+# Use GPU locally (RTX 4060); auto-fall back to CPU on Railway (no GPU available)
+DEVICE = "cpu" if _os.getenv("RAILWAY_ENVIRONMENT") else 0
 
 
 # ==============================================================================
