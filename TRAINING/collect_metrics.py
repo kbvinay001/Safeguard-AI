@@ -400,7 +400,7 @@ readme_content += (
     "```\n"
     "python TRAINING/collect_metrics.py\n"
     "```\n"
-    "Run from `E:\\4TH YEAR PROJECT\\` after completing a new training run.\n"
+    "Run from `E:\\4TH YEAR PROJECT ADV\\` after completing a new training run.\n"
 )
 
 (EVAL_OUT_DIR / "README.md").write_text(readme_content, encoding="utf-8")

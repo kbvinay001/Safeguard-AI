@@ -1,62 +1,67 @@
 @echo off
-title SafeGuard AI v2 — Industrial Safety Monitor
-color 03
+title SafeGuard AI v2 -- Industrial Safety Monitor (GPU)
+color 0A
 cls
 
-:: ── Python 3.12 (CUDA + all packages) ────────────────────────────────────────
-set PYTHON_DIR=C:\Users\kbhas\AppData\Local\Programs\Python\Python312
-set PIP=%PYTHON_DIR%\Scripts\pip.exe
-set PY=%PYTHON_DIR%\python.exe
-set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
+:: ============================================================
+::  SafeGuard AI Launch Script
+::  Uses Anaconda Python 3.13 with PyTorch 2.11+cu128 (RTX 4060)
+::  NO package installs on startup -- launches instantly
+:: ============================================================
+
+:: Set KMP fix to avoid OpenMP DLL conflict (Anaconda + MKL)
+set KMP_DUPLICATE_LIB_OK=TRUE
+set CUDA_VISIBLE_DEVICES=0
+
+:: ── Point to Anaconda Python (has CUDA torch 2.11+cu128) ─────────────
+set ANACONDA_DIR=C:\Users\kbhas\anaconda3
+set PY=%ANACONDA_DIR%\python.exe
+set STREAMLIT=%ANACONDA_DIR%\Scripts\streamlit.exe
+set PATH=%ANACONDA_DIR%;%ANACONDA_DIR%\Scripts;%ANACONDA_DIR%\Library\bin;%PATH%
 
 echo.
-echo  ╔══════════════════════════════════════════════════════════════════╗
-echo  ║        SafeGuard AI  —  Industrial Safety Monitor  v2.0         ║
-echo  ║      YOLOv11n  ·  PPE Detection  ·  Tool Abandonment FSM        ║
-echo  ╚══════════════════════════════════════════════════════════════════╝
-echo.
-echo  [1/3] Checking Python environment...
-echo        Python: %PYTHON_DIR%
+echo  +==================================================================+
+echo  ^|       SafeGuard AI  --  Industrial Safety Monitor  v2.0         ^|
+echo  ^|     YOLOv11n  .  PPE Detection  .  Tool Abandonment FSM         ^|
+echo  ^|        GPU: NVIDIA RTX 4060  ^|  CUDA 12.8  ^|  PyTorch 2.11     ^|
+echo  +==================================================================+
 echo.
 
-:: Verify Python exists
+:: ── Verify Anaconda Python exists ─────────────────────────────────────
 if not exist "%PY%" (
-    echo  [ERROR] Python not found at: %PY%
-    echo          Edit PYTHON_DIR in this bat file to point to your Python 3.12.
+    echo  [ERROR] Anaconda Python not found at: %PY%
+    echo          Check that Anaconda is installed at C:\Users\kbhas\anaconda3
     pause >nul
     exit /b 1
 )
 
-echo  [2/3] Installing / updating required packages...
-echo        (First run: ~2 min  ·  Subsequent runs: instant)
+:: ── Quick GPU sanity check ────────────────────────────────────────────
+echo  [CHECK] Verifying GPU / CUDA...
+"%PY%" -c "import os; os.environ['KMP_DUPLICATE_LIB_OK']='TRUE'; import torch; cuda=torch.cuda.is_available(); gpu=torch.cuda.get_device_name(0) if cuda else 'NOT AVAILABLE'; print('  PyTorch :', torch.__version__); print('  CUDA    :', cuda); print('  GPU     :', gpu)"
 echo.
 
-"%PIP%" install --quiet --upgrade pip
-"%PIP%" install --quiet --upgrade ^
-    ultralytics streamlit torch torchvision ^
-    opencv-python numpy pandas plotly ^
-    fpdf2 psycopg2-binary Pillow requests ^
-    streamlit-option-menu
-
+:: ── Launch Streamlit ──────────────────────────────────────────────────
+echo  [START] Launching SafeGuard AI dashboard...
 echo.
-echo  [3/3] Launching SafeGuard AI dashboard...
-echo.
-echo  ┌─────────────────────────────────────────┐
-echo  │  URL :  http://localhost:8501            │
-echo  │  Stop:  Close this window               │
-echo  └─────────────────────────────────────────┘
+echo  +--------------------------------------+
+echo  ^|  URL  :  http://localhost:8501       ^|
+echo  ^|  Stop :  Press Ctrl+C in this window^|
+echo  +--------------------------------------+
 echo.
 
-:: Open browser after 5 seconds
-timeout /t 5 /nobreak >nul
+:: Open browser after 4 seconds (background)
+start "" /b timeout /t 4 /nobreak >nul
 start "" "http://localhost:8501"
 
-:: ── Launch the new cyberpunk dashboard ────────────────────────────────────────
+:: ── Run the dashboard from WEB DEPLOYMENT dir ─────────────────────────
 cd /d "E:\4TH YEAR PROJECT\WEB DEPLOYMENT"
-"%PY%" -m streamlit run streamlit_app.py ^
+
+"%STREAMLIT%" run streamlit_app.py ^
     --server.port 8501 ^
     --server.headless true ^
     --browser.gatherUsageStats false ^
     --theme.base dark
 
+echo.
+echo  SafeGuard AI stopped. Press any key to close.
 pause >nul

@@ -95,8 +95,11 @@ def init_db():
 
 def log_alert(session: str, source: str, frame: int,
               alert_type: str, tool_name: str = "",
-              timer_s: float = 0.0, missing_ppe: list = []):
+              timer_s: float = 0.0, missing_ppe: list = None):
     """Insert one alert event."""
+    # Guard against mutable default argument mutation across calls
+    if missing_ppe is None:
+        missing_ppe = []
     ts = datetime.datetime.now().isoformat(timespec="seconds")
     try:
         if USE_POSTGRES:
@@ -116,8 +119,8 @@ def log_alert(session: str, source: str, frame: int,
                     (ts, session, source, frame, alert_type, tool_name, timer_s, str(missing_ppe))
                 )
                 conn.commit()
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"DB warning (log_alert): {e}")
 
 
 def upsert_session(session: str, source: str, frames: int, alerts: int, compliance: float):
@@ -145,8 +148,8 @@ def upsert_session(session: str, source: str, frames: int, alerts: int, complian
                     (session, started, source, frames, alerts, compliance)
                 )
                 conn.commit()
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"DB warning (upsert_session): {e}")
 
 
 def get_all_alerts() -> list:
@@ -162,7 +165,8 @@ def get_all_alerts() -> list:
                 rows = conn.execute("SELECT * FROM alerts ORDER BY id DESC").fetchall()
             cols = ["id","ts","session","source","frame","type","tool","timer_s","missing_ppe"]
             return [dict(zip(cols, r)) for r in rows]
-    except Exception:
+    except Exception as e:
+        print(f"DB warning (get_all_alerts): {e}")
         return []
 
 
@@ -179,7 +183,8 @@ def get_all_sessions() -> list:
                 rows = conn.execute("SELECT * FROM sessions ORDER BY id DESC").fetchall()
             cols = ["id","session","started","source","frames","alerts","compliance"]
             return [dict(zip(cols, r)) for r in rows]
-    except Exception:
+    except Exception as e:
+        print(f"DB warning (get_all_sessions): {e}")
         return []
 
 
@@ -200,7 +205,8 @@ def get_alert_counts_by_hour() -> list:
                     SELECT substr(ts,12,2) AS hour, COUNT(*) AS count
                     FROM alerts GROUP BY hour ORDER BY hour
                 """).fetchall()
-    except Exception:
+    except Exception as e:
+        print(f"DB warning (get_alert_counts_by_hour): {e}")
         return []
 
 

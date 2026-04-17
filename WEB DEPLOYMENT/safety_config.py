@@ -107,6 +107,23 @@ LOGS_DIR    = OUTPUTS_DIR / "logs"
 for directory in [OUTPUTS_DIR, VIDEOS_DIR, LOGS_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
+# --- Fallback / resilience constants ---
+# Pre-recorded fallback video played when the live RTSP feed drops entirely.
+# Record a ~30s working detection clip and save it here before the demo.
+FALLBACK_VIDEO = OUTPUTS_DIR / "fallback_demo.mp4"
+
+# Adaptive frame-skipping: if a single frame takes longer than this (ms) to
+# process, the engine will reuse the previous frame's detections on the next
+# frame to keep the Streamlit feed smooth.
+FRAME_SKIP_THRESHOLD_MS = 66   # ~2× target interval at 30 FPS
+
+# Maximum times the live worker will try to reconnect to a dropped RTSP stream
+# before falling back to the fallback video (or "Feed Interrupted" screen).
+MAX_RECONNECT_ATTEMPTS = 3
+
+# Call gc.collect() every this many frames to reclaim numpy/OpenCV buffer RAM.
+GC_INTERVAL_FRAMES = 50
+
 
 # ==============================================================================
 # DETECTION CONFIDENCE THRESHOLDS
@@ -115,17 +132,17 @@ for directory in [OUTPUTS_DIR, VIDEOS_DIR, LOGS_DIR]:
 # These thresholds were tuned empirically on real CCTV footage.
 # A higher threshold reduces false positives but may miss some real objects.
 
-# Human model — raised to 0.40 to suppress false positives from the very
-# sensitive nano model (99%+ mAP makes it pick up reflections and posters)
-CONF_HUMAN = 0.40
+# Human model — 0.30 balances sensitivity vs. false-positives on GPU.
+CONF_HUMAN = 0.30
 
-# Tool model — raised to 0.40 after base-model noise caused floor patterns
-# to be misdetected as hammers
-CONF_TOOL  = 0.40
+# Tool model — 0.20 is the optimal GPU threshold. The model's screwdriver/wrench
+# detections often score 0.22-0.35 on first-frame contact. At 0.25 they were
+# sometimes dropped on the very first frame before the tracker stabilised.
+# 0.20 ensures tools are caught immediately without excessive false positives.
+CONF_TOOL  = 0.20
 
-# PPE model — lowered to 0.22 to catch helmets at unusual angles (e.g. when
-# a worker bends forward, the helmet appears smaller and rotated)
-CONF_PPE   = 0.22
+# PPE model — 0.20 for better recall on partially-occluded helmets/gloves.
+CONF_PPE   = 0.20
 
 
 # ==============================================================================
@@ -168,17 +185,21 @@ FRAME_STRIDE = 1
 # IoU-based matching thresholds for associating detections across frames.
 # Relaxed compared to standard values to handle motion blur and fast movement.
 
-# Minimum IoU to consider two tool bounding boxes the same tool across frames
-TRACKING_IOU_THRESHOLD = 0.25
+# Minimum IoU to consider two tool bounding boxes the same tool across frames.
+# Lowered to 0.15 so objects that move slightly between frames are still tracked
+# rather than spawning a brand-new track (which resets the abandonment timer).
+TRACKING_IOU_THRESHOLD = 0.15
 
 # Minimum IoU between a worker's box and a tool's hazard zone to call the
-# worker "attending" that tool
+# worker "attending" that tool.
 HUMAN_ZONE_IOU = 0.04
 
 # Minimum IoU between a worker's box and a PPE item's box to associate
-# that PPE item with the worker (lowered from 0.08 to 0.03 to handle the
-# case where a worker bends forward and their box shifts significantly)
-PPE_HUMAN_IOU = 0.03
+# that PPE item with the worker.
+# RAISED from 0.02 to 0.05 — at 0.02 PPE items from across the entire frame
+# could bleed into the wrong worker, causing false "helmet missing" alarms
+# even when the worker is visibly wearing a helmet.
+PPE_HUMAN_IOU = 0.05
 
 
 # ==============================================================================
@@ -197,11 +218,11 @@ LOG_FREQUENCY = 30
 # The single class from the Human Detection model
 HUMAN_CLASS = "person"
 
-# All tool class names the TOOLS model may output (includes capitalised variants
-# since some YOLO versions preserve the original dataset casing)
+# All tool class names the TOOLS model may output.
+# extract_detections() normalises class names to lowercase before matching,
+# so only lowercase entries are needed here.
 TOOL_CLASSES = {
     "drill", "hammer", "pliers", "screwdriver", "wrench",
-    "Drill", "Hammer", "Pliers", "Screwdriver", "Wrench",
 }
 
 # PPE items — PRESENCE detected (worker IS wearing this item)
@@ -274,8 +295,33 @@ FONT_THICKNESS = 2
 # ==============================================================================
 # INFERENCE DEVICE
 # ==============================================================================
+#
+# Auto-detects CUDA at import time and falls back to CPU gracefully.
+# This prevents silent zero-detection bugs when running on a machine where
+# the CUDA-capable GPU is unavailable or where a CPU-only PyTorch build is
+# installed (e.g., first-time setup before the CUDA wheel is installed).
 
-DEVICE = 0   # 0 = first GPU (NVIDIA RTX 4060); change to "cpu" for CPU-only
+# GPU-PREFERRED — uses CUDA if present, warns loudly if not.
+# The CPU fallback is only kept so the app can still be previewed during
+# the one-time CUDA PyTorch install; real detections require GPU.
+try:
+    import torch as _torch_cfg
+    if _torch_cfg.cuda.is_available():
+        DEVICE = 0
+        _gpu_name = _torch_cfg.cuda.get_device_name(0)
+        print(f"[SafeGuard AI] [GPU OK] {_gpu_name} - inference on CUDA")
+    else:
+        DEVICE = "cpu"
+        print("=" * 60)
+        print("[SafeGuard AI] [WARNING] CUDA not available!")
+        print(f"[SafeGuard AI]    PyTorch: {_torch_cfg.__version__}")
+        print("[SafeGuard AI]    Models may produce ZERO detections on CPU-only PyTorch.")
+        print("[SafeGuard AI]    Fix: pip install torch==2.5.1+cu124 torchvision==0.20.1+cu124")
+        print("[SafeGuard AI]         --index-url https://download.pytorch.org/whl/cu124")
+        print("=" * 60)
+except ImportError:
+    DEVICE = "cpu"
+    print("[SafeGuard AI] [ERROR] torch not importable - defaulting to cpu")
 
 
 # ==============================================================================

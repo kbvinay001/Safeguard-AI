@@ -54,19 +54,46 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global engine (lazy loading)
+# Global engine (lazy loading — preloaded at startup)
 detection_engine = None
 
 def get_engine():
-    """Lazy load detection engine"""
+    """Return the detection engine, raising 503 if unavailable."""
     global detection_engine
     if detection_engine is None:
+        try:
+            detection_engine = SafetyDetectionEngine(
+                HUMAN_WEIGHTS, PPE_WEIGHTS, TOOL_WEIGHTS, device=DEVICE
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Detection engine unavailable: {e}. Check model weight paths in safety_config.py."
+            )
+    return detection_engine
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Pre-load the detection engine at startup to eliminate cold-start delay."""
+    global detection_engine
+    print("[Startup] Pre-loading SafeGuard AI detection engine...")
+    try:
         detection_engine = SafetyDetectionEngine(
             HUMAN_WEIGHTS, PPE_WEIGHTS, TOOL_WEIGHTS, device=DEVICE
         )
-    return detection_engine
+        print(f"[Startup] Engine ready — {len(detection_engine.loaded_models)}/3 models loaded.")
+    except Exception as e:
+        print(f"[Startup] WARNING: Engine pre-load failed: {e}. Will retry on first request.")
 
 # Request/Response models
+class TrackedTool(BaseModel):
+    """Typed representation of a single tracked tool with its FSM state."""
+    box:   List[float]
+    name:  str
+    timer: float
+    state: str
+
 class DetectionResult(BaseModel):
     frame_number: int
     timestamp: str
@@ -74,7 +101,7 @@ class DetectionResult(BaseModel):
     humans_detected: int
     tools_detected: int
     alerts: List[Dict[str, Any]]
-    tracked_tools: Dict[str, Any]
+    tracked_tools: Dict[str, TrackedTool]
 
 class SystemStatus(BaseModel):
     status: str
@@ -141,35 +168,42 @@ async def get_metrics():
 @app.post("/api/detect/image")
 async def detect_image(file: UploadFile = File(...)):
     """
-    Detect safety violations in a single image
-    
-    Returns: Detection results with annotated image
+    Detect safety violations in a single image.
+
+    Validates file size (<50 MB) and confirms the file is a decodable image
+    before running inference. Returns detection results with an annotated image.
     """
     stats['total_requests'] += 1
-    
+
     try:
-        # Read image
+        # Read and validate file size (cap at 50 MB)
         contents = await file.read()
+        if len(contents) > 50 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Image too large (max 50 MB)")
+
         nparr = np.frombuffer(contents, np.uint8)
         frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
+
         if frame is None:
-            raise HTTPException(status_code=400, detail="Invalid image file")
-        
-        # Get engine
+            raise HTTPException(
+                status_code=400,
+                detail="Could not decode image. Ensure the file is a valid JPEG, PNG, or BMP."
+            )
+
+        # Get engine (raises 503 on failure)
         engine = get_engine()
-        
+
         # Process
         annotated, data = engine.process_frame(frame)
-        
+
         # Update stats
         stats['total_frames'] += 1
         stats['total_alerts'] += len(data['alerts'])
-        
+
         # Encode annotated image
         _, buffer = cv2.imencode('.jpg', annotated)
         img_base64 = base64.b64encode(buffer).decode('utf-8')
-        
+
         return {
             "success": True,
             "timestamp": datetime.now().isoformat(),
@@ -182,67 +216,89 @@ async def detect_image(file: UploadFile = File(...)):
             },
             "annotated_image": f"data:image/jpeg;base64,{img_base64}"
         }
-    
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/detect/video")
 async def detect_video(file: UploadFile = File(...)):
     """
-    Process video file and return results
-    
-    Returns: Frame-by-frame detection results
+    Process a video file and return frame-by-frame detection results.
+
+    Validates that the video opens successfully. Skips unreadable frames
+    rather than crashing. Temp file is always cleaned up via a finally block.
     """
     stats['total_requests'] += 1
-    
+    video_path = None
+
     try:
-        # Save uploaded file
+        # Save uploaded file to a temp location
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp:
             contents = await file.read()
             tmp.write(contents)
             video_path = tmp.name
-        
-        # Get engine
+
+        # Get engine (raises 503 on failure)
         engine = get_engine()
-        
-        # Process video
+
+        # Open and validate
         cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            raise HTTPException(status_code=400, detail="Cannot open video file. Ensure it is a valid MP4/AVI/MOV.")
+
         results = []
         frame_count = 0
-        
+        video_fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
-            
-            annotated, data = engine.process_frame(frame)
+
+            # Skip unreadable frames gracefully rather than crashing
+            try:
+                annotated, data = engine.process_frame(frame)
+            except Exception as frame_err:
+                print(f"  Video frame {frame_count} error (skipped): {frame_err}")
+                data = {"fps": 0, "humans": 0, "tools": 0, "alerts": []}
+
             frame_count += 1
-            
+
             results.append({
                 "frame": frame_count,
-                "timestamp": frame_count / cap.get(cv2.CAP_PROP_FPS),
+                "timestamp": frame_count / video_fps,
                 "detections": {
                     "humans": data['humans'],
                     "tools": data['tools'],
                     "alerts": data['alerts']
                 }
             })
-            
+
             stats['total_frames'] += 1
             stats['total_alerts'] += len(data['alerts'])
-        
+
         cap.release()
-        Path(video_path).unlink()  # Delete temp file
-        
+
         return {
             "success": True,
             "total_frames": frame_count,
             "total_alerts": sum(len(r['detections']['alerts']) for r in results),
             "results": results
         }
-    
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Always clean up the temp file, even on exceptions
+        if video_path:
+            try:
+                Path(video_path).unlink(missing_ok=True)
+            except Exception:
+                pass
 
 @app.get("/api/config")
 async def get_config():
